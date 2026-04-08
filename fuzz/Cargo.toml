@@ -1,0 +1,18 @@
+[package]
+name = "hashkit-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+repository = "https://github.com/santhsecurity/Santh"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+hashkit = { path = ".." }
+
+[[bin]]
+name = "fuzz_hash_functions"
+path = "fuzz_targets/fuzz_hash_functions.rs"
+doc = false

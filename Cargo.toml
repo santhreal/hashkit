@@ -1,0 +1,29 @@
+[package]
+name = "hashkit"
+version = "0.1.0"
+edition = "2021"
+authors = ["Corum Collective LLC <contact@santh.io>"]
+rust-version = "1.85"
+license = "MIT"
+description = "Unified non-cryptographic hash functions for Santh performance crates"
+repository = "https://github.com/santhsecurity/hashkit"
+readme = "README.md"
+keywords = ["hash", "fnv", "splitmix", "wyhash", "performance"]
+categories = ["algorithms", "no-std"]
+
+[lib]
+path = "src/lib.rs"
+
+[[bench]]
+name = "hash_bench"
+harness = false
+
+[lints.clippy]
+unwrap_used = "deny"
+todo = "deny"
+unimplemented = "deny"
+[dev-dependencies]
+proptest = "1.5"
+
+[dependencies]
+blake3 = "1.8.4"
