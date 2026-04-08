@@ -7,7 +7,10 @@ rust-version = "1.85"
 license = "MIT"
 description = "Unified non-cryptographic hash functions for Santh performance crates"
 repository = "https://github.com/santhsecurity/hashkit"
+homepage = "https://github.com/santhsecurity/hashkit"
+documentation = "https://docs.rs/hashkit"
 readme = "README.md"
+include = ["src/**", "Cargo.toml", "README.md", "LICENSE", "CHANGELOG.md"]
 keywords = ["hash", "fnv", "splitmix", "wyhash", "performance"]
 categories = ["algorithms", "no-std"]
 
