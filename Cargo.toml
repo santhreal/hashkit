@@ -5,14 +5,14 @@ edition = "2021"
 authors = ["Corum Collective LLC <contact@santh.io>"]
 rust-version = "1.85"
 license = "MIT"
-description = "Unified non-cryptographic hash functions for Santh performance crates"
+description = "Unified hashing primitives for Santh performance crates, including FNV-1a, SplitMix64, WyHash, and BLAKE3 content hashing"
 repository = "https://github.com/santhsecurity/hashkit"
 homepage = "https://github.com/santhsecurity/hashkit"
 documentation = "https://docs.rs/hashkit"
 readme = "README.md"
-include = ["src/**", "Cargo.toml", "README.md", "LICENSE", "CHANGELOG.md"]
-keywords = ["hash", "fnv", "splitmix", "wyhash", "performance"]
-categories = ["algorithms", "no-std"]
+include = ["src/**", "Cargo.toml", "README.md", "LICENSE"]
+keywords = ["hash", "fnv", "splitmix", "wyhash", "blake3"]
+categories = ["algorithms"]
 
 [lib]
 path = "src/lib.rs"

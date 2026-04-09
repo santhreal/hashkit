@@ -1,4 +1,4 @@
-use hashkit::{bloom_hash_pair, fnv, hash_to_index, splitmix, wyhash};
+use hashkit::{bloom_hash_pair, fnv, hash_to_index, wyhash};
 use proptest::prelude::*;
 
 // We will test various sizes, alignments, and chunkings using proptest

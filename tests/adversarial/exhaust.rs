@@ -1,4 +1,4 @@
-use hashkit::{bloom_hash_pair, fnv, hash_to_index, splitmix, wyhash};
+use hashkit::{bloom_hash_pair, fnv, hash_to_index, wyhash};
 
 #[test]
 fn exhaustive_two_byte_bloom_hash_pairs() {
@@ -94,7 +94,7 @@ fn max_wyhash_seeds() {
 
 #[test]
 fn adversarial_hash_to_index_with_massive_widths() {
-    let hash = 0xDEADBEEF_CAFE_BABE_u64;
+    let hash = 0xDEAD_BEEF_CAFE_BABE_u64;
     let mut collision_map = std::collections::HashMap::new();
 
     for i in 1..=50_000 {

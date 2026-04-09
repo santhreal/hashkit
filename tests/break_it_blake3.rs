@@ -277,13 +277,13 @@ fn test_23_blake3_odd_sized_chunks_streaming() {
     hasher.update(b"odd");
     hasher.update(&vec![0xCC; 1_000_000]);
     hasher.update(b"sized");
-    hasher.update(&vec![0xDD; 7]);
+    hasher.update(&[0xDD; 7]);
 
     let mut full_data = Vec::new();
     full_data.extend_from_slice(b"odd");
     full_data.extend_from_slice(&vec![0xCC; 1_000_000]);
     full_data.extend_from_slice(b"sized");
-    full_data.extend_from_slice(&vec![0xDD; 7]);
+    full_data.extend_from_slice(&[0xDD; 7]);
 
     assert_eq!(
         hasher.finalize(),
@@ -341,7 +341,7 @@ fn test_26_blake3_concurrent_hashing_different_data() {
     }
 
     for t in threads {
-        let (i, hash) = t.join().unwrap();
+        let (i, hash) = t.join().expect("Fix: Thread panicked in concurrent different data test");
         let expected = blake3_hash::hash(&vec![i; 1024 * 1024]);
         assert_eq!(
             hash, expected,
@@ -364,7 +364,7 @@ fn test_27_blake3_concurrent_oneshot() {
 
     let expected = blake3_hash::hash(&data);
     for t in threads {
-        let hash = t.join().unwrap();
+        let hash = t.join().expect("Fix: Thread panicked in concurrent one-shot test");
         assert_eq!(hash, expected, "Fix: Concurrent one-shot hashing mismatch");
     }
 }
@@ -383,7 +383,7 @@ fn test_28_blake3_concurrent_many_small_hashes() {
     }
 
     for t in threads {
-        let hashes = t.join().unwrap();
+        let hashes = t.join().expect("Fix: Thread panicked in concurrent many small hashes test");
         assert_eq!(hashes.len(), 10_000);
         assert_eq!(hashes[0], blake3_hash::hash(&0u32.to_le_bytes()));
     }
@@ -463,8 +463,36 @@ fn test_33_blake3_concurrent_stress_streaming() {
     }
 
     for t in threads {
-        let hash = t.join().unwrap();
+        let hash = t.join().expect("Fix: Thread panicked in concurrent stress streaming test");
         // Just checking it completes without panicking and produces 32 bytes
         assert_eq!(hash.len(), 32, "Fix: Invalid hash length from stress test");
     }
+}
+
+#[test]
+fn test_34_blake3_streaming_cross_platform_stability() {
+    // Known hex output for BLAKE3 hash of "cross-platform stability test"
+    // computed from the reference blake3 crate. Any platform-specific
+    // endianness bug in the wrapper would shift this value.
+    let expected_hex = "516241f5166254e92a1666491cd6fbd9db5d955cb20e4ebd3138c21cf2100022";
+
+    let data = b"cross-platform stability test";
+
+    // One-shot
+    let one_shot_hex = blake3::Hash::from(blake3_hash::hash(data)).to_hex().to_string();
+    assert_eq!(
+        one_shot_hex, expected_hex,
+        "Fix: BLAKE3 one-shot hash changed across platforms/versions"
+    );
+
+    // Streaming via ContentHash with arbitrary chunk boundaries
+    let mut hasher = blake3_hash::ContentHash::new();
+    hasher.update(&data[..7]);
+    hasher.update(&data[7..14]);
+    hasher.update(&data[14..]);
+    let stream_hex = hasher.finalize_hex();
+    assert_eq!(
+        stream_hex, expected_hex,
+        "Fix: BLAKE3 streaming hash differs from one-shot or shifted across platforms"
+    );
 }

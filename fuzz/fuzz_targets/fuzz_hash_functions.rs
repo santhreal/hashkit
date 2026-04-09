@@ -1,6 +1,6 @@
 #![no_main]
 
-use hashkit::{fnv, splitmix, wyhash};
+use hashkit::{blake3_hash, fnv, splitmix, wyhash};
 use libfuzzer_sys::fuzz_target;
 
 fuzz_target!(|data: &[u8]| {
@@ -14,6 +14,7 @@ fuzz_target!(|data: &[u8]| {
         fnv_hash ^ wyhash_hash
     };
 
+    let _ = blake3_hash::hash(data);
     let _ = splitmix::finalize(seed);
     if data.len() >= 2 {
         let _ = splitmix::pair(data[0], data[1]);

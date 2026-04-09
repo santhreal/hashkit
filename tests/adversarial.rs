@@ -3,6 +3,11 @@
 //! These tests verify correctness, determinism, collision resistance,
 //! and performance characteristics under hostile conditions.
 
+#[path = "adversarial/exhaust.rs"]
+mod exhaust;
+#[path = "adversarial/kats.rs"]
+mod kats;
+
 use std::collections::HashSet;
 use std::time::Instant;
 

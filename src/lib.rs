@@ -1,12 +1,12 @@
 #![warn(missing_docs)]
 #![forbid(unsafe_code)]
-//! Unified non-cryptographic hash functions for performance-sensitive crates.
+//! Unified hashing primitives for performance-sensitive crates.
 //!
-//! The crate exposes three small, dependency-free building blocks:
+//! This crate provides a focused set of hash functions:
 //! - [`fnv`] for stable FNV-1a hashing, including the flashsieve-compatible
 //!   two-byte fast path.
 //! - [`splitmix`] for high-quality seed finalization and compact pair hashing.
-//! - [`wyhash`] for fast bulk hashing of arbitrary byte slices.
+//! - [`wyhash`] for fast, dependency-free bulk hashing of arbitrary byte slices.
 //! - [`blake3_hash`] for stable, content-addressed streaming hashing using BLAKE3.
 //!
 //! # Examples
