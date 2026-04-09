@@ -16,7 +16,9 @@ fn concurrent_wyhash_same_data_same_seed() {
     }
 
     for h in handles {
-        let result = h.join().expect("Fix: Thread panicked during wyhash concurrent test");
+        let result = h
+            .join()
+            .expect("Fix: Thread panicked during wyhash concurrent test");
         assert_eq!(
             result, expected,
             "Fix: Concurrent wyhash on same data produced different results"
@@ -36,7 +38,9 @@ fn concurrent_fnv_same_data() {
     }
 
     for h in handles {
-        let result = h.join().expect("Fix: Thread panicked during FNV concurrent test");
+        let result = h
+            .join()
+            .expect("Fix: Thread panicked during FNV concurrent test");
         assert_eq!(
             result, expected,
             "Fix: Concurrent FNV on same data produced different results"
@@ -55,7 +59,9 @@ fn concurrent_splitmix_same_seed() {
     }
 
     for h in handles {
-        let result = h.join().expect("Fix: Thread panicked during SplitMix concurrent test");
+        let result = h
+            .join()
+            .expect("Fix: Thread panicked during SplitMix concurrent test");
         assert_eq!(
             result, expected,
             "Fix: Concurrent SplitMix on same seed produced different results"
@@ -75,7 +81,9 @@ fn concurrent_blake3_oneshot_same_data() {
     }
 
     for h in handles {
-        let result = h.join().expect("Fix: Thread panicked during BLAKE3 one-shot concurrent test");
+        let result = h
+            .join()
+            .expect("Fix: Thread panicked during BLAKE3 one-shot concurrent test");
         assert_eq!(
             result, expected,
             "Fix: Concurrent BLAKE3 one-shot on same data produced different results"
@@ -99,7 +107,9 @@ fn concurrent_blake3_streaming_same_data() {
     }
 
     for h in handles {
-        let result = h.join().expect("Fix: Thread panicked during BLAKE3 streaming concurrent test");
+        let result = h
+            .join()
+            .expect("Fix: Thread panicked during BLAKE3 streaming concurrent test");
         assert_eq!(
             result, expected,
             "Fix: Concurrent BLAKE3 streaming on same data produced different results"

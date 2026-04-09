@@ -3,8 +3,8 @@ use hashkit::{bloom_hash_pair, fnv, splitmix, wyhash};
 // Ensure the file is large
 #[test]
 fn massive_kat_wyhash() {
-    for i in 0..10_000_u32 {
-        let bytes = i.to_le_bytes();
+    for i in 0..10_000 {
+        let bytes = (i as u64).to_le_bytes();
         let h = wyhash::hash(&bytes, i as u64);
         let h2 = wyhash::hash(&bytes, i as u64);
         assert_eq!(h, h2);
@@ -13,8 +13,8 @@ fn massive_kat_wyhash() {
 
 #[test]
 fn massive_kat_fnv() {
-    for i in 0..10_000_u32 {
-        let bytes = i.to_le_bytes();
+    for i in 0..10_000 {
+        let bytes = (i as u64).to_le_bytes();
         let h = fnv::fnv1a_64(&bytes);
         let h2 = fnv::fnv1a_64(&bytes);
         assert_eq!(h, h2);
