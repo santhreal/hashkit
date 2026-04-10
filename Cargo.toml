@@ -5,10 +5,10 @@ edition = "2021"
 authors = ["Corum Collective LLC <contact@santh.io>"]
 rust-version = "1.85"
 license = "MIT"
-description = "Unified non-cryptographic hash functions for Santh performance crates"
+description = "FNV, SplitMix, WyHash, and BLAKE3 hashing helpers for Santh performance crates"
 repository = "https://github.com/santhsecurity/Santh"
 readme = "README.md"
-keywords = ["hash", "fnv", "splitmix", "wyhash", "performance"]
+keywords = ["hash", "blake3", "fnv", "splitmix", "wyhash"]
 categories = ["algorithms", "no-std"]
 
 [lib]
@@ -18,8 +18,16 @@ path = "src/lib.rs"
 name = "hash_bench"
 harness = false
 
-[lints]
-workspace = true
+# Per-crate lint table: cannot merge `workspace = true` with local overrides (Cargo).
+# Align with workspace defaults except relax items needed by integration tests / benches;
+# `src/lib.rs` re-applies strict `expect` / `unwrap` / `pedantic` for the library.
+[lints.clippy]
+unwrap_used = "allow"
+expect_used = "allow"
+todo = "deny"
+unimplemented = "deny"
+panic = "deny"
+pedantic = "allow"
 [dev-dependencies]
 proptest = "1.5"
 

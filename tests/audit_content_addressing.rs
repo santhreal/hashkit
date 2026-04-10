@@ -92,9 +92,9 @@ fn wyhash_length_counter_u32_boundary_simulation() {
     let over_4gb: u64 = u32::MAX as u64 + 1000; // 4,294,967,295 + 1000 = 4,294,968,295
 
     // These should all cast correctly to u64
-    assert_eq!(just_under_4gb as u64, 0xFFFF_FFFF);
-    assert_eq!(exactly_4gb as u64, 0x1_0000_0000);
-    assert_eq!(over_4gb as u64, 0x1_0000_03E7);
+    assert_eq!(just_under_4gb, 0xFFFF_FFFF);
+    assert_eq!(exactly_4gb, 0x1_0000_0000);
+    assert_eq!(over_4gb, 0x1_0000_03E7);
 
     // Verify no truncation occurs
     assert!(just_under_4gb > 0);

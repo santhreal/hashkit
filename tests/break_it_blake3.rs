@@ -253,13 +253,13 @@ fn test_23_blake3_odd_sized_chunks_streaming() {
     hasher.update(b"odd");
     hasher.update(&vec![0xCC; 1_000_000]);
     hasher.update(b"sized");
-    hasher.update(&vec![0xDD; 7]);
+    hasher.update(&[0xDD; 7]);
     
     let mut full_data = Vec::new();
     full_data.extend_from_slice(b"odd");
     full_data.extend_from_slice(&vec![0xCC; 1_000_000]);
     full_data.extend_from_slice(b"sized");
-    full_data.extend_from_slice(&vec![0xDD; 7]);
+    full_data.extend_from_slice(&[0xDD; 7]);
 
     assert_eq!(hasher.finalize(), blake3_hash::hash(&full_data), "Fix: Odd sized streaming mismatch");
 }

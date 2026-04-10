@@ -1,3 +1,5 @@
+//! Micro-benchmark harness (no Criterion). Run with `cargo bench -p hashkit`.
+
 use std::hint::black_box;
 use std::time::{Duration, Instant};
 
@@ -10,7 +12,7 @@ fn main() {
     println!("hashkit benchmark: wyhash vs fnv1a");
     for size in SIZES {
         let input = make_input(size);
-        let fnv = bench("fnv1a_64", size, &input, |bytes| fnv::fnv1a_64(bytes));
+        let fnv = bench("fnv1a_64", size, &input, fnv::fnv1a_64);
         let wy = bench("wyhash", size, &input, |bytes| wyhash::hash(bytes, SEED));
         let ratio = fnv.as_secs_f64() / wy.as_secs_f64();
         println!("size={size:>6}B speedup={ratio:>6.2}x");

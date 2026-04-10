@@ -1,13 +1,27 @@
 #![warn(missing_docs)]
 #![forbid(unsafe_code)]
-//! Unified non-cryptographic hash functions for performance-sensitive crates.
+#![deny(clippy::expect_used, clippy::unwrap_used, clippy::pedantic)]
+//! Unified hash primitives for performance-sensitive and content-addressed use cases.
 //!
-//! The crate exposes three small, dependency-free building blocks:
-//! - [`fnv`] for stable FNV-1a hashing, including the flashsieve-compatible
-//!   two-byte fast path.
-//! - [`splitmix`] for high-quality seed finalization and compact pair hashing.
-//! - [`wyhash`] for fast bulk hashing of arbitrary byte slices.
-//! - [`blake3_hash`] for stable, content-addressed streaming hashing using BLAKE3.
+//! - [`fnv`]: stable 64-bit FNV-1a, including the flashsieve-compatible two-byte fast path.
+//! - [`splitmix`]: `SplitMix64` finalization and compact pair hashing.
+//! - [`wyhash`]: fast non-cryptographic bulk hashing of arbitrary byte slices (pinned algorithm;
+//!   see module docs).
+//! - [`blake3_hash`]: standard BLAKE3-256 via the [`blake3`] crate (streaming and one-shot).
+//!
+//! # Output stability for persistent indices
+//!
+//! - **BLAKE3** digests are defined by the BLAKE3 specification. This crate delegates to the
+//!   `blake3` dependency; upgrading that dependency should preserve the same digests for the
+//!   same inputs as long as it remains a conforming implementation (pin the version in your
+//!   workspace if you need extra assurance during upgrades).
+//! - **`wyhash`**, **FNV**, and **`SplitMix`** outputs are defined by this crate’s Rust source.
+//!   Treat them as a **semver contract**: the golden tests in each module guard against
+//!   accidental output changes; changing those values is a **breaking** API change for any
+//!   on-disk or replicated index that stores these hashes.
+//! - All algorithms here use explicit little-endian interpretation of input bytes where
+//!   relevant, and fixed-width integer arithmetic, so **the same logical input yields the same
+//!   output on every target** supported by Rust for this crate.
 //!
 //! # Examples
 //!
@@ -20,9 +34,13 @@
 //! assert!(slot < 1024);
 //! ```
 
+/// Standard BLAKE3-256 content hashing (see crate-level stability notes).
 pub mod blake3_hash;
+/// 64-bit FNV-1a helpers (spec constants; stable across platforms).
 pub mod fnv;
+/// SplitMix64 finalization helpers (deterministic integer pipeline).
 pub mod splitmix;
+/// WyHash-style bulk hashing (reference 2020-08-26; deterministic across platforms).
 pub mod wyhash;
 
 /// Returns the two hash functions used for double-hashed bloom filter probes.

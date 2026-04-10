@@ -1,4 +1,15 @@
-//! `WyHash` bulk hashing.
+//! WyHash-style bulk hashing (non-cryptographic).
+//!
+//! Implementation follows the public reference
+//! (<https://github.com/wangyi-fudan/wyhash>) as of **2020-08-26** (secret constants and
+//! message schedule). Multiplication uses `u128` widening products; sub-word reads use
+//! [`u32::from_le_bytes`] / [`u64::from_le_bytes`], so **outputs are identical on all
+//! platforms** for the same `data` and `seed`.
+//!
+//! # Persistent indices
+//!
+//! Hash values are part of this crate’s semver contract (see the crate root). Do not change
+//! outputs without a major version bump and a migration plan for stored hashes.
 
 /// `WyHash` secret constants from the reference implementation.
 ///
@@ -219,11 +230,13 @@ mod tests {
 
     #[test]
     fn docs_vector_stays_stable() {
-        // Value computed with corrected wymix (a ^ low ^ b ^ high).
-        let h = hash(&[0, 1, 2], 3);
-        // Just ensure it's deterministic — the exact value is an implementation detail.
-        assert_eq!(hash(&[0, 1, 2], 3), h);
-        // Different seed → different hash.
+        // Golden value for `wyhash` 2020-08-26 reference + this implementation (persistent-index contract).
+        assert_eq!(hash(&[0, 1, 2], 3), 0xA595_5D2C_636A_8299);
         assert_ne!(hash(&[0, 1, 2], 3), hash(&[0, 1, 2], 4));
+    }
+
+    #[test]
+    fn golden_vector_abc_seed_7() {
+        assert_eq!(hash(b"abc", 7), 0xBCFF_FF33_0D22_4889);
     }
 }
