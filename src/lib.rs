@@ -1,4 +1,11 @@
 #![warn(missing_docs)]
+#![warn(clippy::pedantic)]
+#![allow(
+    clippy::module_name_repetitions,
+    clippy::must_use_candidate,
+    clippy::missing_errors_doc,
+)]
+#![deny(missing_docs)]
 #![forbid(unsafe_code)]
 #![deny(clippy::expect_used, clippy::unwrap_used, clippy::pedantic)]
 //! Unified hash primitives for performance-sensitive and content-addressed use cases.
@@ -8,6 +15,26 @@
 //! - [`wyhash`]: fast non-cryptographic bulk hashing of arbitrary byte slices (pinned algorithm;
 //!   see module docs).
 //! - [`blake3_hash`]: standard BLAKE3-256 via the [`blake3`] crate (streaming and one-shot).
+//! - [`sha256_hash`]: standard SHA-256 via the [`sha2`] crate, including npm integrity support.
+//!
+//! # Security note
+//!
+//! The non-cryptographic hashes ([`fnv`], [`splitmix`], [`wyhash`]) are **not** suitable for
+//! security-sensitive use. For cryptographic hashing, use [`blake3_hash`] or [`sha256_hash`].
+//!
+//! # Content-addressed deduplication and large files
+//!
+//! The 64-bit non-cryptographic hashes in this crate are **not** suitable for
+//! content-addressed deduplication. At internet scale, the birthday paradox guarantees
+//! 64-bit collisions around 4 billion items — a certainty, not a risk.
+//!
+//! This crate also does **not** provide a streaming/incremental API for the non-cryptographic
+//! hashes, so files larger than available memory cannot be hashed incrementally.
+//!
+//! For content-addressed deduplication and large-file hashing, use **BLAKE3** instead:
+//!
+//! - One-shot: [`blake3_hash::hash`]
+//! - Streaming: [`blake3_hash::ContentHash`] (supports incremental `update()` / `finalize()`)
 //!
 //! # Output stability for persistent indices
 //!
@@ -15,7 +42,9 @@
 //!   `blake3` dependency; upgrading that dependency should preserve the same digests for the
 //!   same inputs as long as it remains a conforming implementation (pin the version in your
 //!   workspace if you need extra assurance during upgrades).
-//! - **`wyhash`**, **FNV**, and **`SplitMix`** outputs are defined by this crate’s Rust source.
+//! - **SHA-256** digests are defined by the SHA-256 specification and delegated to the `sha2`
+//!   dependency.
+//! - **`wyhash`**, **FNV**, and **`SplitMix`** outputs are defined by this crate's Rust source.
 //!   Treat them as a **semver contract**: the golden tests in each module guard against
 //!   accidental output changes; changing those values is a **breaking** API change for any
 //!   on-disk or replicated index that stores these hashes.
@@ -36,11 +65,17 @@
 
 /// Standard BLAKE3-256 content hashing (see crate-level stability notes).
 pub mod blake3_hash;
+/// Shannon entropy calculation for byte slices.
+pub mod entropy;
 /// 64-bit FNV-1a helpers (spec constants; stable across platforms).
 pub mod fnv;
+/// Hex encoding and decoding.
+pub mod hex;
+/// Standard SHA-256 hashing with npm integrity string support.
+pub mod sha256_hash;
 /// SplitMix64 finalization helpers (deterministic integer pipeline).
 pub mod splitmix;
-/// WyHash-style bulk hashing (reference 2020-08-26; deterministic across platforms).
+/// WyHash-style bulk hashing (reference v4.3; deterministic across platforms).
 pub mod wyhash;
 
 /// Returns the two hash functions used for double-hashed bloom filter probes.
@@ -58,7 +93,7 @@ pub mod wyhash;
 /// ```
 #[inline]
 #[must_use]
-pub fn bloom_hash_pair(a: u8, b: u8) -> (u64, u64) {
+pub const fn bloom_hash_pair(a: u8, b: u8) -> (u64, u64) {
     (fnv::fnv1a_pair(a, b), splitmix::pair(a, b))
 }
 
@@ -77,16 +112,39 @@ pub fn bloom_hash_pair(a: u8, b: u8) -> (u64, u64) {
 /// ```
 #[inline]
 #[must_use]
-pub fn hash_to_index(hash: u64, num_bits: usize) -> usize {
+#[allow(clippy::cast_possible_truncation)]
+pub const fn hash_to_index(hash: u64, num_bits: usize) -> usize {
     if num_bits == 0 {
         return 0;
     }
-    #[allow(clippy::cast_possible_truncation)]
     if num_bits.is_power_of_two() {
-        (hash & ((num_bits as u64).wrapping_sub(1))) as usize
+        // Intentional truncation: only the low bits matter when masking to a
+        // power-of-two boundary.
+        let hash_usize = hash as usize;
+        hash_usize & num_bits.wrapping_sub(1)
     } else {
-        (hash % (num_bits as u64)) as usize
+        let divisor = num_bits as u64;
+        let rem = hash % divisor;
+        rem as usize
     }
+}
+
+/// Compares two byte slices in constant time.
+///
+/// Use this instead of `==` when comparing cryptographic digests to avoid
+/// timing side-channels.
+///
+/// # Examples
+///
+/// ```
+/// let a = hashkit::blake3_hash::hash(b"hello");
+/// let b = hashkit::blake3_hash::hash(b"hello");
+/// assert!(hashkit::secure_compare(&a, &b));
+/// ```
+#[inline]
+#[must_use]
+pub fn secure_compare(a: &[u8], b: &[u8]) -> bool {
+    constant_time_eq::constant_time_eq(a, b)
 }
 
 #[cfg(test)]

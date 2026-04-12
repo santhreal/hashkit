@@ -46,11 +46,11 @@ pub fn fnv1a_64(data: &[u8]) -> u64 {
 /// ```
 #[inline]
 #[must_use]
-pub fn fnv1a_pair(a: u8, b: u8) -> u64 {
+pub const fn fnv1a_pair(a: u8, b: u8) -> u64 {
     let mut hash = OFFSET_BASIS;
-    hash ^= u64::from(a);
+    hash ^= a as u64;
     hash = hash.wrapping_mul(PRIME);
-    hash ^= u64::from(b);
+    hash ^= b as u64;
     hash.wrapping_mul(PRIME)
 }
 

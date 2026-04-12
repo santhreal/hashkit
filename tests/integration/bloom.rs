@@ -12,7 +12,7 @@ fn bloom_filter_simulation() {
         let bytes = i.to_le_bytes();
         let hash1 = wyhash::hash(&bytes, 0);
         let hash2 = wyhash::hash(&bytes, 1);
-        
+
         let idx1 = hash_to_index(hash1, num_bits);
         let idx2 = hash_to_index(hash2, num_bits);
 
@@ -26,7 +26,7 @@ fn bloom_filter_simulation() {
         let bytes = i.to_le_bytes();
         let hash1 = wyhash::hash(&bytes, 0);
         let hash2 = wyhash::hash(&bytes, 1);
-        
+
         let idx1 = hash_to_index(hash1, num_bits);
         let idx2 = hash_to_index(hash2, num_bits);
 
@@ -40,7 +40,7 @@ fn bloom_filter_simulation() {
         let bytes = i.to_le_bytes();
         let hash1 = wyhash::hash(&bytes, 0);
         let hash2 = wyhash::hash(&bytes, 1);
-        
+
         let idx1 = hash_to_index(hash1, num_bits);
         let idx2 = hash_to_index(hash2, num_bits);
 
@@ -51,7 +51,11 @@ fn bloom_filter_simulation() {
 
     // Expected FPR for 10k items in 100k bits with 2 hashes is roughly 3.6%
     // We assert it's less than 5% (500/10000)
-    assert!(false_positives < 500, "False positive rate too high: {}", false_positives);
+    assert!(
+        false_positives < 500,
+        "False positive rate too high: {}",
+        false_positives
+    );
 }
 
 #[test]
@@ -63,7 +67,7 @@ fn bloom_hash_pair_simulation() {
     for a in b'a'..=b'z' {
         for b in b'a'..=b'z' {
             let (h1, h2) = bloom_hash_pair(a, b);
-            
+
             // Generate 3 probe indices
             let idx1 = hash_to_index(h1, num_bits);
             let idx2 = hash_to_index(h2, num_bits);
@@ -79,7 +83,7 @@ fn bloom_hash_pair_simulation() {
     for a in b'a'..=b'z' {
         for b in b'a'..=b'z' {
             let (h1, h2) = bloom_hash_pair(a, b);
-            
+
             let idx1 = hash_to_index(h1, num_bits);
             let idx2 = hash_to_index(h2, num_bits);
             let idx3 = hash_to_index(h1.wrapping_add(h2), num_bits);

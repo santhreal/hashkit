@@ -73,13 +73,13 @@ proptest! {
         bit_to_flip in 0..8_usize
     ) {
         let hash1 = wyhash::hash(&data, seed);
-        
+
         // Flip exactly one bit
         let byte_idx = 0; // Flip in the first byte
         data[byte_idx] ^= 1 << bit_to_flip;
-        
+
         let hash2 = wyhash::hash(&data, seed);
-        
+
         // Strong hashes should avalanche and not equal the previous hash.
         // It is astronomically unlikely a 1-bit flip produces the exact same wyhash value.
         assert_ne!(hash1, hash2);
@@ -110,7 +110,7 @@ proptest! {
         let hash2 = fnv::fnv1a_64(&data);
         assert_ne!(hash1, hash2);
     }
-    
+
     #[test]
     fn splitmix_seed_flip_avalanche(
         seed in any::<u64>(),
@@ -120,7 +120,7 @@ proptest! {
         let flipped_seed = seed ^ (1 << bit_to_flip);
         let hash2 = splitmix::finalize(flipped_seed);
         assert_ne!(hash1, hash2);
-        
+
         let diff_bits = (hash1 ^ hash2).count_ones();
         // A strong avalanche should flip approximately half the bits (32).
         // A lower bound of 10 bits flipped on a single input bit flip is a safe assertion for a good mix.

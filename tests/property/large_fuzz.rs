@@ -13,7 +13,7 @@ proptest! {
         let hash = wyhash::hash(&data, seed);
         assert_eq!(hash, wyhash::hash(&data, seed));
     }
-    
+
     #[test]
     fn fnv_never_panics_on_any_bytes_and_is_stable(
         data in prop::collection::vec(any::<u8>(), 0..5000)
@@ -48,7 +48,7 @@ proptest! {
     ) {
         let h1 = wyhash::hash(&chunk1, seed);
         let h2 = wyhash::hash(&chunk2, seed);
-        
+
         let mut combined = chunk1.clone();
         combined.extend_from_slice(&chunk2);
         let h3 = wyhash::hash(&combined, seed);

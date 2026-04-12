@@ -5,10 +5,10 @@ edition = "2021"
 authors = ["Corum Collective LLC <contact@santh.io>"]
 rust-version = "1.85"
 license = "MIT"
-description = "FNV, SplitMix, WyHash, and BLAKE3 hashing helpers for Santh performance crates"
+description = "Fast hash function collection for Rust — FNV-1a, WyHash, SplitMix, BLAKE3, SHA-256"
 repository = "https://github.com/santhsecurity/Santh"
 readme = "README.md"
-keywords = ["hash", "blake3", "fnv", "splitmix", "wyhash"]
+keywords = [ "hash", "blake3", "fnv", "splitmix", "wyhash" ]
 categories = ["algorithms", "no-std"]
 
 [lib]
@@ -21,15 +21,77 @@ harness = false
 # Per-crate lint table: cannot merge `workspace = true` with local overrides (Cargo).
 # Align with workspace defaults except relax items needed by integration tests / benches;
 # `src/lib.rs` re-applies strict `expect` / `unwrap` / `pedantic` for the library.
-[lints.clippy]
-unwrap_used = "allow"
-expect_used = "allow"
-todo = "deny"
-unimplemented = "deny"
-panic = "deny"
-pedantic = "allow"
+
 [dev-dependencies]
 proptest = "1.5"
 
 [dependencies]
+base64 = "0.22"
 blake3 = "1.8.4"
+constant_time_eq = "0.3"
+sha2 = "0.10"
+
+[[test]]
+name = "unit_audit_additional"
+path = "tests/unit/audit_additional.rs"
+
+[[test]]
+name = "unit_audit_content_addressing"
+path = "tests/unit/audit_content_addressing.rs"
+
+[[test]]
+name = "unit_concurrent"
+path = "tests/unit/concurrent.rs"
+
+[[test]]
+name = "unit_extreme_scale"
+path = "tests/unit/extreme_scale.rs"
+
+[[test]]
+name = "adversarial_adversarial"
+path = "tests/adversarial/adversarial.rs"
+
+[[test]]
+name = "adversarial_adversarial_hash"
+path = "tests/adversarial/adversarial_hash.rs"
+
+[[test]]
+name = "adversarial_break_it"
+path = "tests/adversarial/break_it.rs"
+
+[[test]]
+name = "adversarial_break_it_blake3"
+path = "tests/adversarial/break_it_blake3.rs"
+
+[[test]]
+name = "adversarial_exhaust"
+path = "tests/adversarial/exhaust.rs"
+
+[[test]]
+name = "adversarial_kats"
+path = "tests/adversarial/kats.rs"
+
+[[test]]
+name = "integration_bloom"
+path = "tests/integration/bloom.rs"
+
+[[test]]
+name = "integration_integration"
+path = "tests/integration/integration.rs"
+
+[[test]]
+name = "property_blake3"
+path = "tests/property/blake3.rs"
+
+[[test]]
+name = "property_invariants"
+path = "tests/property/invariants.rs"
+
+[[test]]
+name = "property_large_fuzz"
+path = "tests/property/large_fuzz.rs"
+
+[[test]]
+name = "property_property"
+path = "tests/property/property.rs"
+

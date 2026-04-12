@@ -13,7 +13,7 @@ const MIX2: u64 = 0x94D0_49BB_1331_11EB;
 /// ```
 #[inline]
 #[must_use]
-pub fn finalize(seed: u64) -> u64 {
+pub const fn finalize(seed: u64) -> u64 {
     let mut z = seed.wrapping_add(GAMMA);
     z = (z ^ (z >> 30)).wrapping_mul(MIX1);
     z = (z ^ (z >> 27)).wrapping_mul(MIX2);
@@ -31,8 +31,8 @@ pub fn finalize(seed: u64) -> u64 {
 /// ```
 #[inline]
 #[must_use]
-pub fn pair(a: u8, b: u8) -> u64 {
-    finalize((u64::from(a) << 8) | u64::from(b))
+pub const fn pair(a: u8, b: u8) -> u64 {
+    finalize(((a as u64) << 8) | (b as u64))
 }
 
 #[cfg(test)]
@@ -46,6 +46,17 @@ mod tests {
     #[test]
     fn zero_seed_matches_reference() {
         assert_eq!(finalize(0), 0xE220_A839_7B1D_CDAF);
+    }
+
+    #[test]
+    fn seed_one_matches_reference() {
+        assert_eq!(finalize(1), 0x910A_2DEC_8902_5CC1);
+    }
+
+    #[test]
+    fn gamma_seed_matches_reference() {
+        // GAMMA (0x9E3779B97F4A7C15) is a well-known seed for SplitMix64:
+        assert_eq!(finalize(0x9E37_79B9_7F4A_7C15), 0x6E78_9E6A_A1B9_65F4);
     }
 
     #[test]

@@ -1,20 +1,20 @@
 //! WyHash-style bulk hashing (non-cryptographic).
 //!
 //! Implementation follows the public reference
-//! (<https://github.com/wangyi-fudan/wyhash>) as of **2020-08-26** (secret constants and
+//! (<https://github.com/wangyi-fudan/wyhash>) **v4.3** (secret constants and
 //! message schedule). Multiplication uses `u128` widening products; sub-word reads use
 //! [`u32::from_le_bytes`] / [`u64::from_le_bytes`], so **outputs are identical on all
 //! platforms** for the same `data` and `seed`.
 //!
 //! # Persistent indices
 //!
-//! Hash values are part of this crate’s semver contract (see the crate root). Do not change
+//! Hash values are part of this crate's semver contract (see the crate root). Do not change
 //! outputs without a major version bump and a migration plan for stored hashes.
 
 /// `WyHash` secret constants from the reference implementation.
 ///
 /// These values are taken from the wyhash reference implementation
-/// (<https://github.com/wangyi-fudan/wyhash>) version 2020-08-26.
+/// (<https://github.com/wangyi-fudan/wyhash>) version v4.3.
 const SECRET: [u64; 4] = [
     0x2D35_8DCC_AA6C_78A5,
     0x8BB8_4B93_962E_ACC9,
@@ -26,18 +26,21 @@ const SECRET: [u64; 4] = [
 #[inline]
 fn wymum(a: u64, b: u64) -> (u64, u64) {
     let product = u128::from(a).wrapping_mul(u128::from(b));
-    #[allow(clippy::cast_possible_truncation)]
-    let low = product as u64;
-    #[allow(clippy::cast_possible_truncation)]
-    let high = (product >> 64) as u64;
+    let low = u64::try_from(product & u128::from(u64::MAX))
+        .unwrap_or_else(|_| unreachable!("low 64 bits always fit in u64"));
+    let high = u64::try_from(product >> 64)
+        .unwrap_or_else(|_| unreachable!("high 64 bits always fit in u64"));
     (low, high)
 }
 
-/// Mixes two 64-bit values using wymum and XORs the result with the inputs.
+/// Mixes two 64-bit values using wymum and returns the XOR of the low and high
+/// 64-bit halves of the 128-bit product.
+///
+/// This matches the reference `_wymix` from the wyhash C implementation.
 #[inline]
 fn wymix(a: u64, b: u64) -> u64 {
     let (low, high) = wymum(a, b);
-    a ^ low ^ b ^ high
+    low ^ high
 }
 
 /// Reads 8 bytes from input and returns as little-endian u64.
@@ -143,7 +146,6 @@ pub fn hash(data: &[u8], seed: u64) -> u64 {
     }
 
     let (left, right) = wymum(a ^ SECRET[1], b ^ seed);
-    #[allow(clippy::cast_possible_truncation)]
     let len = data.len() as u64;
     wymix(left ^ SECRET[0] ^ len, right ^ SECRET[1])
 }
@@ -203,7 +205,8 @@ mod tests {
         }
 
         let (left, right) = wymum(a ^ SECRET[1], b ^ seed);
-        wymix(left ^ SECRET[0] ^ (data.len() as u64), right ^ SECRET[1])
+        let len = data.len() as u64;
+        wymix(left ^ SECRET[0] ^ len, right ^ SECRET[1])
     }
 
     #[test]
@@ -230,13 +233,19 @@ mod tests {
 
     #[test]
     fn docs_vector_stays_stable() {
-        // Golden value for `wyhash` 2020-08-26 reference + this implementation (persistent-index contract).
-        assert_eq!(hash(&[0, 1, 2], 3), 0xA595_5D2C_636A_8299);
+        // Golden values verified against reference wyhash v4.3 (C implementation).
+        assert_eq!(hash(&[0, 1, 2], 3), 0x7587_3B9D_BF36_FA6B);
+        assert_eq!(hash(b"abc", 7), 0x6549_6750_5AB6_D52E);
+        assert_eq!(hash(b"", 0), 0x9322_8A4D_E0EE_C5A2);
         assert_ne!(hash(&[0, 1, 2], 3), hash(&[0, 1, 2], 4));
     }
 
     #[test]
-    fn golden_vector_abc_seed_7() {
-        assert_eq!(hash(b"abc", 7), 0xBCFF_FF33_0D22_4889);
+    fn golden_vectors_match_reference_implementation() {
+        // These values were computed with the official C reference implementation
+        // using the default secret constants `_wyp`.
+        assert_eq!(hash(b"abc", 7), 0x6549_6750_5AB6_D52E);
+        assert_eq!(hash(&[0, 1, 2], 3), 0x7587_3B9D_BF36_FA6B);
+        assert_eq!(hash(b"", 0), 0x9322_8A4D_E0EE_C5A2);
     }
 }
