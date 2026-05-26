@@ -1,3 +1,6 @@
+[workspace]
+members = ["."]
+
 [package]
 name = "hashkit"
 version = "0.1.0"
@@ -94,4 +97,8 @@ path = "tests/property/large_fuzz.rs"
 [[test]]
 name = "property_property"
 path = "tests/property/property.rs"
+
+[[test]]
+name = "campaign_s_proptest_03"
+path = "tests/campaign_s_proptest_03.rs"
 

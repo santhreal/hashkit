@@ -108,7 +108,10 @@ mod tests {
 
             let upper_hex = hex.to_uppercase();
             let decoded_upper = decode(&upper_hex).expect("valid uppercase hex");
-            assert_eq!(decoded_upper, bytes, "uppercase round-trip failed for byte {byte}");
+            assert_eq!(
+                decoded_upper, bytes,
+                "uppercase round-trip failed for byte {byte}"
+            );
         }
     }
 
@@ -147,7 +150,10 @@ mod tests {
             let decoded_upper = decode(&upper_hex).expect("valid uppercase hex");
             assert_eq!(decoded_upper, vec![byte], "decode failed for {upper_hex}");
             let reencoded_upper = encode(&decoded_upper);
-            assert_eq!(reencoded_upper, hex, "encode(decode({upper_hex})) should produce lowercase");
+            assert_eq!(
+                reencoded_upper, hex,
+                "encode(decode({upper_hex})) should produce lowercase"
+            );
         }
     }
 }
