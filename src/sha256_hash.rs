@@ -27,6 +27,27 @@ pub fn hash(data: &[u8]) -> [u8; 32] {
     hasher.finalize().into()
 }
 
+/// Computes the SHA-256 of a byte slice as a lowercase hex string.
+///
+/// The canonical one-shot "sha256 → hex" helper. Prefer this over a private
+/// `Sha256::new(); update; finalize; hex` block, which several crates have
+/// reimplemented independently.
+///
+/// # Examples
+///
+/// ```
+/// let hex = hashkit::sha256_hash::sha256_hex(b"abc");
+/// assert_eq!(
+///     hex,
+///     "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+/// );
+/// ```
+#[inline]
+#[must_use]
+pub fn sha256_hex(data: &[u8]) -> String {
+    crate::hex::encode(&hash(data))
+}
+
 /// Computes an npm-style integrity string: `sha256-<base64>`.
 ///
 /// # Examples
@@ -87,7 +108,7 @@ pub fn verify(data: &[u8], integrity: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{hash, integrity, parse_integrity, verify};
+    use super::{hash, integrity, parse_integrity, sha256_hex, verify};
 
     #[test]
     fn empty_input_produces_known_digest() {
@@ -124,6 +145,25 @@ mod tests {
             0x19, 0xdb, 0x06, 0xc1,
         ];
         assert_eq!(digest, expected);
+    }
+
+    #[test]
+    fn sha256_hex_matches_nist_vectors() {
+        // NIST CAVP lowercase-hex digests for the empty string and "abc".
+        assert_eq!(
+            sha256_hex(b""),
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        );
+        assert_eq!(
+            sha256_hex(b"abc"),
+            "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        );
+    }
+
+    #[test]
+    fn sha256_hex_is_hex_of_hash() {
+        let data = b"consolidation check";
+        assert_eq!(sha256_hex(data), crate::hex::encode(&hash(data)));
     }
 
     #[test]

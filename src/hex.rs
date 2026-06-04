@@ -74,23 +74,34 @@ pub fn decode(hex: &str) -> Result<Vec<u8>, DecodeError> {
         return Err(DecodeError::OddLength);
     }
 
-    let mut out = Vec::with_capacity(hex.len() / 2);
-    let mut iter = hex.char_indices();
-    while let (Some((i1, c1)), Some((i2, c2))) = (iter.next(), iter.next()) {
-        let b1 = val(c1, i1)?;
-        let b2 = val(c2, i2)?;
-        out.push((b1 << 4) | b2);
+    // Iterate over BYTES, not chars. Hex is strictly ASCII, and the odd-length
+    // guard above uses byte length -- iterating chars instead would let a
+    // multibyte UTF-8 string with an even byte count but fewer chars (e.g. a
+    // single 4-byte emoji) slip past the loop entirely and decode to an empty/
+    // truncated `Ok`, silently accepting invalid hex. Byte iteration rejects any
+    // non-ASCII byte via `val`.
+    let bytes = hex.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len() / 2);
+    let mut i = 0;
+    while i < bytes.len() {
+        let hi = val(bytes[i], i)?;
+        let lo = val(bytes[i + 1], i + 1)?;
+        out.push((hi << 4) | lo);
+        i += 2;
     }
     Ok(out)
 }
 
 #[inline]
-fn val(c: char, index: usize) -> Result<u8, DecodeError> {
+fn val(c: u8, index: usize) -> Result<u8, DecodeError> {
     match c {
-        '0'..='9' => Ok(c as u8 - b'0'),
-        'a'..='f' => Ok(c as u8 - b'a' + 10),
-        'A'..='F' => Ok(c as u8 - b'A' + 10),
-        _ => Err(DecodeError::InvalidCharacter { c, index }),
+        b'0'..=b'9' => Ok(c - b'0'),
+        b'a'..=b'f' => Ok(c - b'a' + 10),
+        b'A'..=b'F' => Ok(c - b'A' + 10),
+        _ => Err(DecodeError::InvalidCharacter {
+            c: c as char,
+            index,
+        }),
     }
 }
 
@@ -135,6 +146,22 @@ mod tests {
         assert!(decode("gg").is_err());
         assert!(decode("0g").is_err());
         assert!(decode("g0").is_err());
+    }
+
+    #[test]
+    fn decode_rejects_non_ascii_multibyte() {
+        // Regression: a multibyte UTF-8 string can have an even *byte* length but
+        // a char count that made the old char-pair loop body never run, returning
+        // a silent empty `Ok` instead of rejecting invalid hex.
+        assert!(decode("🦀").is_err(), "single 4-byte emoji must be rejected");
+        assert!(decode("é").is_err(), "2-byte char must be rejected");
+        assert!(decode("aé").is_err(), "ascii+multibyte must be rejected");
+        assert!(
+            decode("🦀🦀").is_err(),
+            "two emoji (8 bytes) must be rejected, not decoded to empty"
+        );
+        // And it must never silently succeed with empty output.
+        assert_ne!(decode("🦀"), Ok(Vec::new()));
     }
 
     #[test]

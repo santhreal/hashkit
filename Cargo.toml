@@ -3,13 +3,14 @@ members = ["."]
 
 [package]
 name = "hashkit"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
-authors = ["Corum Collective LLC <contact@santh.io>"]
+authors = ["Corum Collective LLC <contact@santh.dev>"]
 rust-version = "1.85"
 license = "MIT"
-description = "Fast hash function collection for Rust — FNV-1a, WyHash, SplitMix, BLAKE3, SHA-256"
-repository = "https://github.com/santhsecurity/Santh"
+description = "Fast hash function collection for Rust — FNV-1a, WyHash, SplitMix, BLAKE3, SHA-256, plus Shannon entropy"
+repository = "https://github.com/santhsecurity/hashkit"
+homepage = "https://github.com/santhsecurity/hashkit"
 readme = "README.md"
 keywords = [ "hash", "blake3", "fnv", "splitmix", "wyhash" ]
 categories = ["algorithms", "no-std"]
@@ -101,4 +102,8 @@ path = "tests/property/property.rs"
 [[test]]
 name = "campaign_s_proptest_03"
 path = "tests/campaign_s_proptest_03.rs"
+
+[[test]]
+name = "property_entropy"
+path = "tests/property/entropy.rs"
 

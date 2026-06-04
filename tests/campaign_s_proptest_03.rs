@@ -34,7 +34,7 @@ bytes_cases! {
         prop_assert!(idx < bits);
     },
     p02_hash_to_index_zero_bits => |data| {
-        prop_assert_eq!(hash_to_index(splitmix::finalize(7), 0), 0);
+        prop_assert_eq!(hash_to_index(splitmix::finalize(fnv::fnv1a_64(&data)), 0), 0);
     },
     p03_fnv_deterministic => |data| {
         let a = fnv::fnv1a_64(&data);
@@ -81,8 +81,11 @@ bytes_cases! {
         let e = entropy::shannon_entropy(&data);
         prop_assert!((0.0..=8.0).contains(&e));
     },
-    p12_entropy_bucket_bounded => |data| {
-        prop_assert!(entropy::entropy_bucket(&data) <= 255);
+    p12_entropy_bucket_uniform_is_zero => |data| {
+        // Empty or single-distinct-value input quantizes to bucket 0.
+        if data.is_empty() || data.iter().all(|&x| x == data[0]) {
+            prop_assert_eq!(entropy::entropy_bucket(&data), 0);
+        }
     },
     p13_blake3_deterministic => |data| {
         prop_assert_eq!(blake3_hash::hash(&data), blake3_hash::hash(&data));
@@ -106,13 +109,16 @@ bytes_cases! {
     },
     p19_wyhash_empty_ok => |data| {
         let _ = wyhash::hash(&[], 0);
+        let _ = wyhash::hash(&data, 0);
     },
     p20_fnv_empty_ok => |data| {
         let _ = fnv::fnv1a_64(&[]);
+        let _ = fnv::fnv1a_64(&data);
     },
     p21_hash_to_index_mask_large => |data| {
         let bits = 1024usize;
         prop_assert!(hash_to_index(u64::MAX, bits) < bits);
+        prop_assert!(hash_to_index(wyhash::hash(&data, 0), bits) < bits);
     },
     p22_bloom_indices_in_range => |data| {
         if data.len() >= 2 {
