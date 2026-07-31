@@ -24,12 +24,14 @@ const SECRET: [u64; 4] = [
 
 /// Multiplies two 64-bit values and returns the low and high 64 bits of the 128-bit result.
 #[inline]
+// The two casts deliberately truncate the 128-bit product to its low and high
+// 64-bit halves; that IS the operation, so silence the pedantic lint here rather
+// than route it through a fallible try_from + unreachable panic path.
+#[allow(clippy::cast_possible_truncation)]
 fn wymum(a: u64, b: u64) -> (u64, u64) {
     let product = u128::from(a).wrapping_mul(u128::from(b));
-    let low = u64::try_from(product & u128::from(u64::MAX))
-        .unwrap_or_else(|_| unreachable!("low 64 bits always fit in u64"));
-    let high = u64::try_from(product >> 64)
-        .unwrap_or_else(|_| unreachable!("high 64 bits always fit in u64"));
+    let low = product as u64;
+    let high = (product >> 64) as u64;
     (low, high)
 }
 

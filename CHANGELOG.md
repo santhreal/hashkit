@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-07-30
+
+### Fixed
+- `cargo clippy --all-targets` now compiles clean: math identifiers in the
+  `entropy` module docs are backticked (`doc_markdown`), and the crate-level
+  `expect_used`/`unwrap_used`/`pedantic` denies are scoped to non-test code so
+  the test suite no longer trips them. No behavioral changes.
+- Removed a redundant `#[must_use]` on `bloom_probes` (its `impl Iterator`
+  return type is already `#[must_use]`).
+
 ## [0.1.0] - 2025-04-12
 
 ### Added

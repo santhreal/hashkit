@@ -7,7 +7,10 @@
 )]
 #![deny(missing_docs)]
 #![forbid(unsafe_code)]
-#![deny(clippy::expect_used, clippy::unwrap_used, clippy::pedantic)]
+#![cfg_attr(
+    not(test),
+    deny(clippy::expect_used, clippy::unwrap_used, clippy::pedantic)
+)]
 //! Unified hash primitives for performance-sensitive and content-addressed use cases.
 //!
 //! - [`fnv`]: stable 64-bit FNV-1a, including the flashsieve-compatible two-byte fast path.
@@ -26,7 +29,7 @@
 //!
 //! The 64-bit non-cryptographic hashes in this crate are **not** suitable for
 //! content-addressed deduplication. At internet scale, the birthday paradox guarantees
-//! 64-bit collisions around 4 billion items — a certainty, not a risk.
+//! 64-bit collisions around 4 billion items (a certainty, not a risk).
 //!
 //! This crate also does **not** provide a streaming/incremental API for the non-cryptographic
 //! hashes, so files larger than available memory cannot be hashed incrementally.
@@ -129,6 +132,46 @@ pub const fn hash_to_index(hash: u64, num_bits: usize) -> usize {
     }
 }
 
+/// Generates `k` bloom-filter probe bit-indices from a hash pair.
+///
+/// Uses Kirsch-Mitzenmacher double hashing: the `i`-th probe is
+/// `hash_to_index(h1 + i*h2, num_bits)` for `i` in `0..k`. This standard
+/// construction lets two independent hashes stand in for `k` hashes with no
+/// measurable false-positive-rate loss, so callers stop hand-rolling the
+/// `h1 + i*h2` stepping. Pair `(h1, h2)` with [`bloom_hash_pair`] (or any two
+/// independent hashes, e.g. `wyhash` with two seeds).
+///
+/// Returns a lazy iterator, so the caller chooses whether to allocate. When
+/// `num_bits == 0` every probe is `0`, matching [`hash_to_index`]. Probe
+/// indices may repeat when `k` is large relative to `num_bits`; that is the
+/// expected behaviour of a bloom filter, not an error.
+///
+/// # Examples
+///
+/// ```
+/// let (h1, h2) = hashkit::bloom_hash_pair(b'x', b'y');
+/// let probes: Vec<usize> = hashkit::bloom_probes(h1, h2, 3, 1024).collect();
+///
+/// assert_eq!(probes.len(), 3);
+/// assert!(probes.iter().all(|&i| i < 1024));
+/// // The first probe is always h1 reduced (i == 0 contributes no h2 term).
+/// assert_eq!(probes[0], hashkit::hash_to_index(h1, 1024));
+/// ```
+#[inline]
+pub fn bloom_probes(
+    h1: u64,
+    h2: u64,
+    k: usize,
+    num_bits: usize,
+) -> impl Iterator<Item = usize> {
+    (0..k).map(move |i| {
+        // g_i = h1 + i*h2 (mod 2^64); wrapping IS the modular reduction, so a
+        // large i never panics on overflow.
+        let combined = h1.wrapping_add((i as u64).wrapping_mul(h2));
+        hash_to_index(combined, num_bits)
+    })
+}
+
 /// Compares two byte slices in constant time.
 ///
 /// Use this instead of `==` when comparing cryptographic digests to avoid
@@ -149,7 +192,7 @@ pub fn secure_compare(a: &[u8], b: &[u8]) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{bloom_hash_pair, fnv, hash_to_index, splitmix, wyhash};
+    use super::{bloom_hash_pair, bloom_probes, fnv, hash_to_index, splitmix, wyhash};
 
     const SAMPLE_SEED: u64 = 0x0123_4567_89AB_CDEF;
 
@@ -184,6 +227,40 @@ mod tests {
                 assert!(hash_to_index(hash, bits) < bits);
             }
         }
+    }
+
+    #[test]
+    fn bloom_probes_follow_kirsch_mitzenmacher_formula() {
+        // Exercise the modulo path (non-power-of-two num_bits) so a wrong
+        // reduction would show. The i-th probe must be (h1 + i*h2) mod bits.
+        let (h1, h2) = bloom_hash_pair(b'x', b'y');
+        let bits = 1000_usize;
+        let expected: Vec<usize> = (0..5)
+            .map(|i| {
+                let combined = h1.wrapping_add((i as u64).wrapping_mul(h2));
+                (combined % bits as u64) as usize
+            })
+            .collect();
+        let got: Vec<usize> = bloom_probes(h1, h2, 5, bits).collect();
+        assert_eq!(got, expected);
+        assert_eq!(got.len(), 5);
+    }
+
+    #[test]
+    fn bloom_probes_first_is_h1_reduced_and_all_in_bounds() {
+        let (h1, h2) = bloom_hash_pair(b'n', b'g');
+        for bits in [2_usize, 8, 256, 1024, 1000] {
+            let probes: Vec<usize> = bloom_probes(h1, h2, 7, bits).collect();
+            assert_eq!(probes.len(), 7);
+            assert_eq!(probes[0], hash_to_index(h1, bits));
+            assert!(probes.iter().all(|&i| i < bits));
+        }
+    }
+
+    #[test]
+    fn bloom_probes_zero_k_yields_no_indices() {
+        let (h1, h2) = bloom_hash_pair(b'a', b'b');
+        assert_eq!(bloom_probes(h1, h2, 0, 512).count(), 0);
     }
 
     #[test]

@@ -1,10 +1,10 @@
-//! S-proptest-03 — hashkit mass proptest: hash/index invariants, no panic on arbitrary bytes.
+//! S-proptest-03 (hashkit mass proptest: hash/index invariants, no panic on arbitrary bytes).
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use hashkit::{
-    blake3_hash, bloom_hash_pair, entropy, fnv, hex, secure_compare, sha256_hash, splitmix,
-    wyhash, hash_to_index,
+    blake3_hash, bloom_hash_pair, entropy, fnv, hash_to_index, hex, secure_compare, sha256_hash,
+    splitmix, wyhash,
 };
 use proptest::prelude::*;
 

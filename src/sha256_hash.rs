@@ -60,10 +60,13 @@ pub fn sha256_hex(data: &[u8]) -> String {
 #[must_use]
 pub fn integrity(data: &[u8]) -> String {
     let digest = hash(data);
-    format!(
-        "sha256-{}",
-        base64::engine::general_purpose::STANDARD.encode(digest)
-    )
+    // "sha256-" (7) + base64 of a 32-byte digest (44 incl. padding) = 51 bytes.
+    // Encode directly into the prefixed String to avoid the intermediate
+    // base64 String allocation that `format!` would require.
+    let mut out = String::with_capacity(51);
+    out.push_str("sha256-");
+    base64::engine::general_purpose::STANDARD.encode_string(digest, &mut out);
+    out
 }
 
 /// Parses an npm integrity string and returns the raw 32-byte digest.

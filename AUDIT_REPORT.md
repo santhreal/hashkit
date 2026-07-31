@@ -106,7 +106,7 @@ The separation is **intentional and correct**:
 From matchcorr/src/types.rs:
 ```rust
 /// Uses BLAKE3 for collision resistance at petabyte scale. The birthday
-/// paradox guarantees 64-bit hash collisions around 4 billion files —
+/// paradox guarantees 64-bit hash collisions around 4 billion files 
 /// at internet scale that's a certainty, not a risk. 256-bit hashes
 /// push the collision threshold to ~2^128 files (effectively infinite).
 ```

@@ -94,7 +94,10 @@ pub fn hash(data: &[u8]) -> [u8; 32] {
 #[inline]
 #[must_use]
 pub fn secure_compare(a: &[u8; 32], b: &[u8; 32]) -> bool {
-    constant_time_eq::constant_time_eq(a.as_slice(), b.as_slice())
+    // Typed convenience wrapper. The constant-time comparison lives in exactly
+    // ONE place (crate::secure_compare); this only narrows the argument type for
+    // 32-byte BLAKE3 digests and forwards, rather than re-calling constant_time_eq.
+    crate::secure_compare(a.as_slice(), b.as_slice())
 }
 
 /// BLAKE3-256 digest of the empty byte string (spec / reference test vector).

@@ -9,7 +9,12 @@
 // Exact `== 0.0` comparisons are intentional: `shannon_entropy` returns
 // exactly `0.0` for empty and single-symbol input by construction, so the
 // known-answer assertions are exact, not approximate.
-#![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::float_cmp)]
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::float_cmp
+)]
 
 use hashkit::entropy::{entropy_bucket, shannon_entropy};
 use proptest::prelude::*;

@@ -3,17 +3,20 @@ members = ["."]
 
 [package]
 name = "hashkit"
-version = "0.1.1"
+version = "0.1.3"
 edition = "2021"
-authors = ["Corum Collective LLC <contact@santh.dev>"]
+authors = ["Santh Project <contact@santh.dev>"]
 rust-version = "1.85"
 license = "MIT"
-description = "Fast hash function collection for Rust — FNV-1a, WyHash, SplitMix, BLAKE3, SHA-256, plus Shannon entropy"
-repository = "https://github.com/santhsecurity/hashkit"
-homepage = "https://github.com/santhsecurity/hashkit"
+description = "Fast hash function collection for Rust. FNV-1a, WyHash, SplitMix, BLAKE3, SHA-256, plus Shannon entropy"
+repository = "https://github.com/santhreal/hashkit"
+homepage = "https://santh.dev"
 readme = "README.md"
 keywords = [ "hash", "blake3", "fnv", "splitmix", "wyhash" ]
 categories = ["algorithms", "no-std"]
+
+[package.metadata.santh]
+status = "beta"
 
 [lib]
 path = "src/lib.rs"
@@ -51,13 +54,13 @@ path = "tests/unit/concurrent.rs"
 name = "unit_extreme_scale"
 path = "tests/unit/extreme_scale.rs"
 
+# NOTE: the aggregator targets below (adversarial_adversarial, integration_integration,
+# property_property) #[path]-include their sibling files as modules, so those siblings
+# must NOT also have standalone [[test]] targets or they compile+run twice. Siblings
+# that are NOT aggregated (break_it*, entropy, campaign_*) keep their own targets.
 [[test]]
 name = "adversarial_adversarial"
-path = "tests/adversarial/adversarial.rs"
-
-[[test]]
-name = "adversarial_adversarial_hash"
-path = "tests/adversarial/adversarial_hash.rs"
+path = "tests/adversarial/adversarial.rs" # includes exhaust.rs + kats.rs
 
 [[test]]
 name = "adversarial_break_it"
@@ -68,36 +71,12 @@ name = "adversarial_break_it_blake3"
 path = "tests/adversarial/break_it_blake3.rs"
 
 [[test]]
-name = "adversarial_exhaust"
-path = "tests/adversarial/exhaust.rs"
-
-[[test]]
-name = "adversarial_kats"
-path = "tests/adversarial/kats.rs"
-
-[[test]]
-name = "integration_bloom"
-path = "tests/integration/bloom.rs"
-
-[[test]]
 name = "integration_integration"
-path = "tests/integration/integration.rs"
-
-[[test]]
-name = "property_blake3"
-path = "tests/property/blake3.rs"
-
-[[test]]
-name = "property_invariants"
-path = "tests/property/invariants.rs"
-
-[[test]]
-name = "property_large_fuzz"
-path = "tests/property/large_fuzz.rs"
+path = "tests/integration/integration.rs" # includes bloom.rs
 
 [[test]]
 name = "property_property"
-path = "tests/property/property.rs"
+path = "tests/property/property.rs" # includes blake3.rs + invariants.rs + large_fuzz.rs
 
 [[test]]
 name = "campaign_s_proptest_03"

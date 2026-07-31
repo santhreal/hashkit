@@ -79,44 +79,14 @@ fn wyhash_empty_input_all_seeds_valid() {
 // 2. LARGE INPUT (>4GB) COUNTER OVERFLOW TESTS
 // =============================================================================
 
-/// CRITICAL: Verify wyhash length counter doesn't overflow at 4GB boundary.
-///
-/// At 4GB = 4,294,967,296 bytes, the length counter crosses u32::MAX.
-/// This test verifies the internal usize -> u64 cast logic without
-/// actually allocating 4GB of memory.
-#[test]
-fn wyhash_length_counter_u32_boundary_simulation() {
-    // Simulate what happens at 4GB boundary by testing the length logic directly
-    let just_under_4gb: u64 = u32::MAX as u64; // 4,294,967,295
-    let exactly_4gb: u64 = (u32::MAX as u64) + 1; // 4,294,967,296
-    let over_4gb: u64 = u32::MAX as u64 + 1000; // 4,294,967,295 + 1000 = 4,294,968,295
-
-    // These should all cast correctly to u64
-    assert_eq!(just_under_4gb, 0xFFFF_FFFF);
-    assert_eq!(exactly_4gb, 0x1_0000_0000);
-    assert_eq!(over_4gb, 0x1_0000_03E7);
-
-    // Verify no truncation occurs
-    assert!(just_under_4gb > 0);
-    assert!(exactly_4gb > just_under_4gb);
-    assert!(over_4gb > exactly_4gb);
-}
-
-/// CRITICAL: Verify wyhash handles maximum theoretical input length.
-#[test]
-fn wyhash_max_length_handling() {
-    // The maximum usize on 64-bit systems
-    let _max_usize = usize::MAX as u64;
-
-    // This should not overflow when cast to u64 (it's already u64)
-    // The wyhash algorithm uses: data.len() as u64
-    // On 64-bit, usize = u64, so this is identity
-    // On 32-bit, usize = u32, so this extends to u64
-
-    // Verify the cast is safe
-    let len_u64 = usize::MAX as u64;
-    assert!(len_u64 >= u32::MAX as u64, "usize should be at least u32");
-}
+// NOTE: two tautological "simulation" tests were removed here
+// (wyhash_length_counter_u32_boundary_simulation, wyhash_max_length_handling).
+// They asserted only pure integer arithmetic (`u32::MAX as u64 == 0xFFFF_FFFF`,
+// `usize::MAX as u64 >= u32::MAX as u64`) and never invoked wyhash, so they
+// proved nothing about the hash (Law 6). The genuinely testable length behavior
+// is already covered by wyhash_length_affects_hash_at_boundaries and
+// wyhash_large_input_no_counter_overflow below; the true 4GB counter boundary
+// cannot be exercised without a 4GB allocation.
 
 /// CRITICAL: Test that length affects hash at boundary conditions.
 #[test]
@@ -225,25 +195,11 @@ fn streaming_hash_not_supported_documented() {
     // assert_eq!(result, hash_combined); // This would work with streaming
 }
 
-/// CRITICAL: For warpscan content hashing, recommend BLAKE3 instead.
-#[test]
-fn blake3_recommended_for_content_hashing() {
-    // This test documents that hashkit is for bloom filters/indexing only,
-    // NOT for content-addressed deduplication.
-    //
-    // For deduplication at internet scale, use matchcorr::ContentHash (BLAKE3):
-    // - 256-bit output (collision resistant to ~2^128)
-    // - Streaming API for files >4GB
-    // - Cryptographically secure
-
-    // This crate's hashes are 64-bit with expected collisions at ~2^32 items
-    // (birthday paradox bound). At internet scale with billions of files,
-    // 64-bit collisions are CERTAIN, not possible.
-
-    assert_eq!(std::mem::size_of::<u64>(), 8, "64-bit hash output");
-    // 2^64 space with birthday paradox 50% collision at ~2^32
-    // For deduplication, this is unacceptable.
-}
+// NOTE: blake3_recommended_for_content_hashing was removed here. It only
+// asserted `std::mem::size_of::<u64>() == 8` (a Rust guarantee, not wyhash
+// behavior, Law 6); its real content was documentation ("prefer BLAKE3 for
+// content addressing; wyhash is 64-bit and for bloom/indexing only"). That
+// guidance belongs in module/README docs, not a no-op test.
 
 // =============================================================================
 // 4. NULL BYTES IN INPUT - Must hash correctly

@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-11  
 **Auditor:** Security Research Agent  
-**Scope:** `libs/performance/indexing/hashkit/` — 902 LOC, imported by 7+ crates  
+**Scope:** `libs/performance/indexing/hashkit/`: 902 LOC, imported by 7+ crates  
 **Test Count:** 330+ tests passing (lib, integration, adversarial, property, concurrent, extreme-scale)  
 **Standard:** `cargo test` + `cargo clippy -- -D warnings` enforced after every change.
 
@@ -57,11 +57,11 @@ Because `A` and `B` are overwritten in-place by `_wymum`, the reference returns 
 - Updated all golden vectors in `src/wyhash.rs` to reference-verified values.
 - Updated module docs from "2020-08-26" (a non-existent tag) to "v4.3" (the actual matching reference).
 
-> **Severity: CRITICAL** — Any consumer attempting interoperability with standard wyhash would have received incompatible hashes, breaking content-addressed schemes or cross-language indices.
+> **Severity: CRITICAL**: Any consumer attempting interoperability with standard wyhash would have received incompatible hashes, breaking content-addressed schemes or cross-language indices.
 
 ---
 
-## 3. BLAKE3 — Re-export or Reimplementation?
+## 3. BLAKE3: Re-export or Reimplementation?
 
 **Verdict: ✅ PURE RE-EXPORT**
 
@@ -144,7 +144,7 @@ with `p(x) = count(x) / len`.
 
 - Empty input correctly returns `0.0`.
 - Maximal entropy for bytes (`8.0` bits) is produced by uniformly distributed `[0..=255]`.
-- `entropy_bucket` normalizes by `8.0`, clamps to `0.0..=1.0`, scales by `255.0`, and rounds — yielding `0..=255` as documented.
+- `entropy_bucket` normalizes by `8.0`, clamps to `0.0..=1.0`, scales by `255.0`, and rounds (yielding `0..=255` as documented).
 
 Precision-loss clippy warnings were suppressed with `#[allow(...)]` because:
 - `len as f64` only loses precision for slices > 2⁵³ bytes (~9 PB), which is physically impossible in this API.
@@ -165,7 +165,7 @@ Audit actions taken:
 - Added all-bytes-together test (`[0..=255]` → 512-char hex → exact decode).
 - Verified odd-length rejection and invalid-character rejection.
 
-The decoder uses `char_indices()`, which returns **byte indices**. For ASCII hex strings this is identical to character indices; for malformed multi-byte input the reported index is the byte position of the first invalid UTF-8 sequence byte — a reasonable behavior for a hex parser.
+The decoder uses `char_indices()`, which returns **byte indices**. For ASCII hex strings this is identical to character indices; for malformed multi-byte input the reported index is the byte position of the first invalid UTF-8 sequence byte (a reasonable behavior for a hex parser).
 
 ---
 

@@ -1,4 +1,4 @@
-# hashkit-fuzz — Technical Spec
+# hashkit-fuzz: Technical Spec
 
 ## Overview
 
