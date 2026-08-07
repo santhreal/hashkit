@@ -14,10 +14,11 @@ The crate is organized as a flat module tree with algorithm-specific modules and
 - **`blake3_hash`**: Thin safe wrapper around the `blake3` crate. Provides one-shot `hash` and a streaming `ContentHash` struct (`update` / `finalize` / `finalize_hex`).
 - **`sha256_hash`**: Thin wrapper around the `sha2` crate. Provides one-shot `hash`, npm integrity string generation (`integrity`), parsing (`parse_integrity`), and verification (`verify`).
 - **`hex`**: Dependency-free lowercase hex encoding (`encode`) and decoding (`decode`) with explicit error reporting.
-- **`entropy`**: Shannon entropy calculation (`shannon_entropy`) and 8-bit quantization (`entropy_bucket`) for byte slices.
+- **`entropy`**: Shannon entropy calculation (`shannon_entropy`), streaming accumulator (`EntropyCounter`), and 8-bit quantization (`entropy_bucket`) for byte slices.
 
 Root utilities in `lib.rs`:
 - `bloom_hash_pair(a, b)`: returns `(fnv1a_pair(a, b), splitmix::pair(a, b))`.
+- `bloom_probes(h1, h2, k, num_bits)`: generates `k` bit indices using Kirsch-Mitzenmacher double hashing.
 - `hash_to_index(hash, num_bits)`: maps a `u64` to a bit index using power-of-two masking or modulo, with zero-safe fallback.
 - `secure_compare(a, b)`: constant-time byte-slice comparison for cryptographic digests.
 
@@ -35,7 +36,8 @@ All modules are pure Rust with `#![forbid(unsafe_code)]`.
 
 ### Types
 - `blake3_hash::ContentHash`: streaming BLAKE3 hasher.
-- `hex::DecodeError`: `#[non_exhaustive]` enum with `OddLength` and `InvalidCharacter { c, index }`.
+- `entropy::EntropyCounter`: streaming Shannon entropy accumulator.
+- `hex::DecodeError`: `#[non_exhaustive]` enum with `OddLength` and `InvalidCharacter { byte, index }`.
 
 ### Functions
 - `fnv::fnv1a_64(data: &[u8]) -> u64`
@@ -48,12 +50,14 @@ All modules are pure Rust with `#![forbid(unsafe_code)]`.
 - `sha256_hash::hash(data: &[u8]) -> [u8; 32]`
 - `sha256_hash::integrity(data: &[u8]) -> String`
 - `sha256_hash::parse_integrity(integrity: &str) -> Option<[u8; 32]>`
+- `sha256_hash::sha256_hex(data: &[u8]) -> String`
 - `sha256_hash::verify(data: &[u8], integrity: &str) -> bool`
 - `hex::encode(bytes: &[u8]) -> String`
 - `hex::decode(hex: &str) -> Result<Vec<u8>, DecodeError>`
 - `entropy::shannon_entropy(bytes: &[u8]) -> f64`
 - `entropy::entropy_bucket(bytes: &[u8]) -> u8`
 - `bloom_hash_pair(a: u8, b: u8) -> (u64, u64)`
+- `bloom_probes(h1: u64, h2: u64, k: usize, num_bits: usize) -> impl Iterator<Item = usize>`
 - `hash_to_index(hash: u64, num_bits: usize) -> usize`
 - `secure_compare(a: &[u8], b: &[u8]) -> bool`
 

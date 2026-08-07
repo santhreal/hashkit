@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.4] - 2026-08-07
+
+- Crate `authors` set to `Santh <64453045+santhreal@users.noreply.github.com>`.
+- Docs: SPEC/README mention EntropyCounter, bloom_probes, sha256_hex, DecodeError::InvalidCharacter byte field.
+
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
