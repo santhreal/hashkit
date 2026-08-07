@@ -102,7 +102,7 @@ impl EntropyCounter {
     /// Fold another chunk of bytes into the running histogram.
     pub fn update(&mut self, bytes: &[u8]) {
         for &byte in bytes {
-            self.freq[usize::from(byte)] += 1;
+            self.freq[usize::from(byte)] = self.freq[usize::from(byte)].saturating_add(1);
         }
         self.total = self.total.saturating_add(bytes.len() as u64);
     }
@@ -306,3 +306,11 @@ mod tests {
         }
     }
 }
+    #[test]
+    fn saturating_frequency_counter_does_not_overflow() {
+        let mut c = EntropyCounter::new();
+        // Simulate near-max count
+        c.freq[65] = u64::MAX;
+        c.update(b"A");
+        assert_eq!(c.freq[65], u64::MAX);
+    }

@@ -1,5 +1,14 @@
 # Changelog
 
+
+## [0.1.5] - 2026-08-07
+
+### Fixed
+- `sha256_hash::parse_integrity` now robustly parses SRI integrity strings with surrounding whitespace, option parameters (`?key=val`), and multi-token SRI strings containing a SHA-256 fallback digest.
+- `entropy::EntropyCounter` frequency counting now saturates `u64` per byte rather than overflowing, maintaining consistency with `total` saturating additions.
+
+### Added
+- `blake3_hash::ContentHash::reset()` method to reset streaming hasher state without re-allocating `ContentHash`.
 ## [0.1.4] - 2026-08-07
 
 - Crate `authors` set to `Santh <64453045+santhreal@users.noreply.github.com>`.

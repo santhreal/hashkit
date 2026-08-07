@@ -35,6 +35,12 @@ impl ContentHash {
         }
     }
 
+    /// Resets the internal hasher state to empty, allowing reuse without reallocation.
+    #[inline]
+    pub fn reset(&mut self) {
+        self.hasher.reset();
+    }
+
     /// Updates the internal hash state with new data.
     ///
     /// This allows for streaming hashing of large inputs, up to arbitrary lengths.
@@ -170,5 +176,13 @@ mod tests {
         let expected = blake3::hash(b"hello").to_hex().to_string();
         assert_eq!(hex, expected);
         assert_eq!(hex.len(), 64);
+    }
+    #[test]
+    fn reset_resets_hasher_state() {
+        let mut hasher = ContentHash::new();
+        hasher.update(b"some previous data");
+        hasher.reset();
+        hasher.update(b"hello");
+        assert_eq!(hasher.finalize(), hash(b"hello"));
     }
 }

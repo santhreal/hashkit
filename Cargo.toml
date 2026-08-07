@@ -3,7 +3,7 @@ members = ["."]
 
 [package]
 name = "hashkit"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 authors = ["Santh <64453045+santhreal@users.noreply.github.com>"]
 rust-version = "1.85"

@@ -84,9 +84,17 @@ pub fn integrity(data: &[u8]) -> String {
 #[inline]
 #[must_use]
 pub fn parse_integrity(integrity: &str) -> Option<[u8; 32]> {
-    let b64 = integrity.strip_prefix("sha256-")?;
-    let bytes = base64::engine::general_purpose::STANDARD.decode(b64).ok()?;
-    bytes.try_into().ok()
+    for token in integrity.split_whitespace() {
+        if let Some(b64) = token.strip_prefix("sha256-") {
+            let b64 = b64.split('?').next().unwrap_or(b64);
+            if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(b64) {
+                if let Ok(arr) = bytes.try_into() {
+                    return Some(arr);
+                }
+            }
+        }
+    }
+    None
 }
 
 /// Verifies that `data` matches the given npm integrity string.
@@ -206,6 +214,28 @@ mod tests {
     #[test]
     fn parse_rejects_bad_base64() {
         assert!(parse_integrity("sha256-!!!").is_none());
+    }
+
+    #[test]
+    fn parse_integrity_handles_whitespace_options_and_multitoken() {
+        let data = b"hello world";
+        let integ = integrity(data);
+        let raw_digest = hash(data);
+
+        // Whitespace handling
+        let padded = format!("  \n  {integ} \t\n");
+        assert_eq!(parse_integrity(&padded), Some(raw_digest));
+        assert!(verify(data, &padded));
+
+        // Options handling (e.g. ?foo=bar option suffix)
+        let with_option = format!("{integ}?foo=bar");
+        assert_eq!(parse_integrity(&with_option), Some(raw_digest));
+        assert!(verify(data, &with_option));
+
+        // Multi-token handling (e.g. sha512 fallback + sha256)
+        let multi = format!("sha512-bogus {integ} sha384-other");
+        assert_eq!(parse_integrity(&multi), Some(raw_digest));
+        assert!(verify(data, &multi));
     }
 
     #[test]

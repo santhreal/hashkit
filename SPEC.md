@@ -67,7 +67,7 @@ All modules are pure Rust with `#![forbid(unsafe_code)]`.
 - **`hash_to_index`** is infallible: returns `0` when `num_bits == 0` to avoid division-by-zero.
 - **`hex::decode`** returns `Result<Vec<u8>, DecodeError>`:
   - `OddLength`: input has an odd number of characters.
-  - `InvalidCharacter { c, index }`: non-hex character found at the given byte index.
+  - `InvalidCharacter { byte, index }`: non-hex character found at the given byte index.
 - **`sha256_hash::parse_integrity`** returns `Option<[u8; 32]>`, yielding `None` for missing `sha256-` prefix, invalid base64, or decoded lengths other than 32 bytes.
 - **`sha256_hash::verify`** returns `false` for any malformed integrity string or digest mismatch.
 
